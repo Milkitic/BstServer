@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BstServer\BstServer.csproj" />
+    <ProjectReference Include="..\ConsoleHost\ConsoleHost.csproj" />
+  </ItemGroup>
+
+</Project>
