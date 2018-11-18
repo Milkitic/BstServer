@@ -1,0 +1,282 @@
+﻿@model BstServer.Areas.Admin.Models.ConsoleViewModel
+@{
+    ViewData["Title"] = "Console";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+    <style type="text/css">
+        .cover {
+            background: #ffffff;
+            background: rgba(255, 255, 255, 0.7);
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            left: 0px;
+            top: 50px;
+        }
+
+        .tool-bar {
+            position: fixed;
+            text-align: right;
+            padding: 5px;
+            background-color: #F0F0F0;
+            width: 500px;
+        }
+
+            .tool-bar .close-button {
+                width: 36px;
+                height: 36px;
+                right: 0px;
+            }
+
+                .tool-bar .close-button i {
+                    position: relative;
+                    font-size: 20px;
+                    top: 6px;
+                }
+
+            .tool-bar .title {
+                position: absolute;
+                text-align: left;
+                left: 5px;
+                margin: 8px;
+                color: #303030;
+            }
+
+        .popup {
+            position: fixed;
+            background: #ffffff;
+            width: 500px;
+            height: 250px;
+            left: 0px;
+            top: 50px;
+            bottom: 0px;
+            right: 0px;
+            margin: auto;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 10px;
+            /*overflow: hidden;*/
+        }
+
+            .popup .content-area {
+                padding: 10px;
+                padding-top: 55px;
+                background-color: #F8F8F8;
+                height: 100%;
+            }
+
+        .cmd-area {
+            overflow: hidden;
+        }
+
+            .cmd-area pre {
+                margin-right: -20px;
+                height: 540px;
+                background-color: #303030;
+                color: #e0e0e0;
+                border-radius: 0;
+                border: 0;
+                overflow-x: hidden;
+            }
+
+            .cmd-area .cmd-input {
+                margin-top: -11px;
+                width: 100%;
+                border-radius: 0;
+                color: #f0f0f0;
+                background-color: #484848;
+                border: 0;
+                -webkit-box-shadow: none;
+                box-shadow: none;
+                transition: none;
+            }
+    </style>
+}
+
+<div class="cover" id="cover" style="@(Model.IsRunning ? "display:none;" : "")">
+    <div class="popup" id="popup">
+        <div class="tool-bar">
+            <label class="title"></label>
+            <a href="javascript:open_popup(false);"
+               class="btn btn-danger btn-xs close-button">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
+        <div class="content-area">
+            <form asp-controller="Console" asp-action="RunProcess" method="post">
+                <h4>@(Model.IsRunning ? $"当前实例：{System.IO.Path.GetFileName(Model.FileName)}({Model.RunningGuid})" : "当前没有实例运行。")</h4>
+                <hr />
+                <div asp-validation-summary="All" class="text-danger"></div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label asp-for="HostSettings.ShowWindow">
+                            <input asp-for="HostSettings.ShowWindow" />
+                            @Html.DisplayNameFor(m => m.HostSettings.ShowWindow)
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="checkbox">
+                        <label asp-for="HostSettings.RedirectStandardInput">
+                            <input asp-for="HostSettings.RedirectStandardInput" />
+                            @Html.DisplayNameFor(m => m.HostSettings.RedirectStandardInput)
+                        </label>
+                    </div>
+                </div>
+                @*<div class="form-group">
+                        <div class="checkbox">
+                            <label asp-for="HostSettings.Encoding">
+                                <input asp-for="HostSettings.Encoding" />
+                                @Html.DisplayNameFor(m => m.HostSettings.Encoding)
+                            </label>
+                        </div>
+                    </div>*@
+                <div class="form-group" style="text-align: center;">
+                    <button type="submit" class="btn btn-default">启动新实例</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<section class="wrapper">
+    <h3>
+        <i class="fa fa-angle-right"></i> @ViewData["Title"]
+    </h3>
+    <div class="row mt">
+        <div class="col-md-3">
+            <div class="form-group">
+                <label>
+                    @Html.DisplayNameFor(m => m.IsRunning)
+                </label>
+                <p>@(Model.IsRunning ? "正在运行" : "已停止")</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    @Html.DisplayNameFor(m => m.RunningGuid)
+                </label>
+                <p>@(Model.IsRunning ? Model.RunningGuid.ToString() : "未知")</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    @Html.DisplayNameFor(m => m.FileName)
+                </label>
+                <p>@(Model.FileName)</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    @Html.DisplayNameFor(m => m.Args)
+                </label>
+                <p>@(string.IsNullOrEmpty(Model.Args) ? "(empty)" : Model.Args)</p>
+            </div>
+            <div class="form-group">
+                <label>
+                    @Html.DisplayNameFor(m => m.CanSendMessage)
+                </label>
+                <p>@(Model.IsRunning ? (Model.CanSendMessage ? "开启" : "关闭") : "未知")</p>
+            </div>
+            <div class="form-group">
+                <a id="btn_stop" class="btn btn-danger btn-sm" asp-action="ConsoleOperate" asp-route-type="1"><i class="fa fa-stop"></i> Stop</a>
+                <a id="btn_restart" class="btn btn-warning btn-sm" asp-action="ConsoleOperate" asp-route-type="0"><i class="fa fa-undo"></i> Restart</a>
+            </div>
+            <div class="form-group">
+                <a id="btn_new" class="btn btn-default btn-sm" href="javascript:open_popup(true);"><i class="fa fa-plus-square"></i> Start new process...</a>
+            </div>
+        </div>
+        <div class="col-md-9">
+
+            <div id="exception" class="alert alert-warning" style="display: none;"></div>
+            <div class="cmd-area">
+                <pre id="dataArea" style=""></pre>
+                <input id="inputArea" class="form-control cmd-input" placeholder=">_" />
+            </div>
+            <button id="btn_exec" class="btn btn-default btn-sm" style="display: none;">Send</button>
+
+        </div>
+    </div>
+</section>
+
+@section Scripts{
+    <script type="text/javascript">
+        var socket;
+        var scheme = document.location.protocol === "https:" ? "wss" : "ws";
+        var port = document.location.port ? ":" + document.location.port : "";
+        var socketText = scheme + "://" + document.location.hostname + port + "/ws";
+        $(function () {
+            socket = new WebSocket(socketText);
+            socket.onopen = function (e) {
+                updateState();
+            };
+            socket.onclose = function (e) {
+                updateState();
+                $("#exception").show();
+                $("#exception").text('Connection closed. Code: ' + htmlEscape(e.code) + '.');
+            };
+            socket.onerror = updateState;
+            socket.onmessage = function (e) {
+                $("#dataArea").text($("#dataArea").text() + htmlEscape(e.data) + "\r\n");
+                $("#dataArea").scrollTop(document.getElementById("dataArea").scrollHeight);
+            };
+        });
+        $("#inputArea").keydown(function () {
+            if (event.keyCode === 13) {//keyCode=13是回车键
+                $('#btn_exec').click();
+            }
+        });
+
+        $("#btn_exec").click(function (e) {
+            var cmd = $("#inputArea").val();
+            $.post("@Url.Action("SendCommand")", { command: cmd }, function (result) {
+                if (result.code === "200") {
+                    $("#inputArea").val("");
+                }
+                else if (result.code === "-101") {
+                    $("#exception").show();
+                    $("#exception").empty().append(result.message);
+                }
+            });
+        });
+        function updateState() {
+            if (!socket) {
+                var empty = "";
+            } else {
+                switch (socket.readyState) {
+                    case WebSocket.CLOSED:
+
+                        break;
+                    case WebSocket.CLOSING:
+
+                        break;
+                    case WebSocket.CONNECTING:
+
+                        break;
+                    case WebSocket.OPEN:
+
+                        break;
+                    default:
+
+                        break;
+                }
+            }
+        }
+
+        function htmlEscape(str) {
+            return str;
+            @*.replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');*@
+        }
+
+        function open_popup(e) {
+            if (e === true) {
+                $("#cover").fadeIn(100);
+            }
+            else
+                $("#cover").fadeOut(100);
+        }
+
+    </script>
+}

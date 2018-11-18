@@ -1,0 +1,172 @@
+﻿@{
+    ViewData["Title"] = "Statistics";
+}
+@section Styles{
+    <style>
+        .fixed-table-container {
+            background-color: #202020;
+            border-color: #333;
+            padding-bottom: 0px;
+            height: 640px;
+            overflow-y: scroll;
+        }
+
+        #table-ff {
+            color: #D0D0D0;
+            border-color: #333;
+            border: 1px;
+        }
+
+            #table-ff thead {
+                background-color: #2D2D30;
+            }
+
+            #table-ff tbody {
+                background-color: #202020;
+            }
+
+            #table-ff th, #table-ff td {
+                border-color: #484848;
+            }
+
+            #table-ff tbody tr:hover {
+                background-color: #202020;
+            }
+    </style>
+}
+@*<h2>@ViewData["Title"]</h2>
+    <h3>@ViewData["Message"]</h3>*@
+<section class="wrapper">
+    <h2>
+        <i class="fa fa-angle-right"></i> @ViewData["Title"]
+    </h2>
+
+    <div class="row mt">
+        <div class="col-md-12">
+            <div id="ff-detail">
+                <h4>
+                    <i class="fa fa-angle-right"></i> 武器黑枪统计
+                </h4>
+                <form style="margin:5px;">
+                    <div v-on:click="check">
+                        <input type="checkbox" id="chkRefresh" v-on:click="check" style="cursor: pointer;" checked="checked" />
+                        <label for="chkRefresh" style="cursor: pointer;">自动刷新</label>
+                    </div>
+                    数据：<input type="date" id="queryDate" onchange="changeDate()" />
+                </form>
+                @*<h5>{{nowY}}年{{nowM}}月{{nowD}}日数据</h5>*@
+                <div class="fixed-table-container">
+                    <table id="table-ff" class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" width="30px">
+                                    <div class="fht-cell" style="width: 30px;"></div>
+                                </th>
+                                <th style="text-align: center;">
+                                    <div class="th-inner">武器</div>
+                                    <div class="fht-cell" style="width: 155px;"></div>
+                                </th>
+
+                                <th style="text-align: center;" v-bind:colspan="column">
+                                    <div class="th-inner">黑枪数据（攻击方）</div>
+                                    <div class="fht-cell" style="width: 166px;"></div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="(weapon,i) in dataList">
+                                <td style="text-align: center; vertical-align:middle">{{i+1}}</td>
+                                <td style="text-align: center; vertical-align: middle; overflow: hidden">
+                                    <div v-if="weapon.picName!=''" style="height: 30px;">
+                                        <img v-bind:src="'https://steamcommunity-a.akamaihd.net/public/images/gamestats/550/'+weapon.picName+'.jpg'" style="width:auto;height:auto;max-width:100%;max-height:100%;" />
+                                    </div>
+                                    {{weapon.weapon}}
+                                </td>
+                                <template v-for="info in weapon.detail">
+                                    <td style="text-align: center; vertical-align:middle">
+                                        <span style="font-weight:700">{{info.user}}</span><br />
+                                        <span style="color: #b0b0b0;font-size:0.8em">{{info.damage}} HP, {{info.times}} time{{info.times>1?"s":""}}</span>
+                                    </td>
+                                </template>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </div>
+        </div>
+    </div>
+</section>
+@section Scripts{
+    <script src="~/js/vue.min.js"></script>
+    <script type="text/javascript">
+        var timer;
+
+        var vueFfDetail = new Vue({
+            el: "#ff-detail",
+            data: {
+                autoRefrsh: true,
+                dataList: {},
+                column: 1,
+                message: "",
+                nowY: 0,
+                nowM: 0,
+                nowD: 0,
+            },
+            methods: {
+                check: function (e) {
+                    var checked = $('#chkRefresh').is(':checked');
+                    this.autoRefrsh = checked;
+                }
+            }
+        });
+
+        $(document).ready(function () {
+            FfDetailRefresh();
+            timer = window.setInterval(FfDetailRefresh, 1000);
+        });
+
+        var FfDetailRefresh = function(e) {
+            if (!vueFfDetail.autoRefrsh)
+                return;
+            var now = new Date();
+            vueFfDetail.nowY = now.getFullYear();
+            vueFfDetail.nowM = now.getMonth() + 1;
+            vueFfDetail.nowD = now.getDate();
+            $("#queryDate").val(vueFfDetail.nowY + "-" + vueFfDetail.nowM + "-" + vueFfDetail.nowD);
+            getFfDetail(vueFfDetail.nowY, vueFfDetail.nowM, vueFfDetail.nowD);
+        };
+
+        var getFfDetail = function(y,m,d) {
+
+            $.post("@Url.Action("GetStatistics")", { y, m, d})
+                .done(function(obj) {
+                    if (obj.code === 200) {
+                        vueFfDetail.dataList = obj.data.dataList;
+                        vueFfDetail.column = obj.data.column;
+                    } else {
+                        vueFfDetail.message = "[" + obj.code + "] " + obj.status + ": " + obj.message;
+                    }
+                })
+                .fail(function(e) {
+                    vueFfDetail.message = e;
+                });
+        };
+        var changeDate = function () {
+            var choice = new Date($("#queryDate").val());
+            var y = choice.getFullYear();
+            var m = choice.getMonth()+1;
+            var d = choice.getDate();
+            if (y === vueFfDetail.nowY && m === vueFfDetail.nowM && d === vueFfDetail.nowD) {
+                vueFfDetail.autoRefrsh = true;
+                $('#chkRefresh').attr("checked", true);
+            } else {
+                vueFfDetail.autoRefrsh = false;
+                $('#chkRefresh').attr("checked", false);
+            }
+            getFfDetail(y, m, d);
+        };
+    </script>
+}

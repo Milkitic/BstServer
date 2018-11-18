@@ -1,0 +1,160 @@
+﻿
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h2>Index</h2>
+<div id="c1"></div>
+
+@section Scripts{
+    <script src="https://gw.alipayobjects.com/os/antv/pkg/_antv.g2-3.3.2/dist/g2.min.js"></script>
+    <script type="text/javascript">
+        G2.track(false);
+        var dataList;
+        var timer;
+        var nowMaxTime;
+        var chart = new G2.Chart({
+            container: 'c1', // 指定图表容器 ID
+            forceFit: true,
+            padding: [20, 130, 80, 50],
+            width: 640, // 指定图表宽度
+            height: 580 // 指定图表高度
+        });
+        chart.animate(false);
+        chart.tooltip({
+            crosshairs: {
+                type: 'line'
+            }
+        });
+        chart.axis('cpu_usage',
+            {
+                label: {
+                    formatter: function formatter(val) {
+                        return val;
+                    }
+                }
+            });
+        chart.axis('memory',
+            {
+                label: {
+                    formatter: function formatter(val) {
+                        return val;
+                    }
+                }
+            });
+        chart.axis('time',
+            {
+                label: {
+                    formatter: function formatter(val) {
+                        return val.split(" ")[1];
+                    }
+                }
+            });
+        chart.area().position('time*cpu_usage').color('type', ['#1f77b4', '#1797f1']).shape('').select(true);
+        chart.line().position('time*cpu_usage').color('type', ['#1f77b4', '#1797f1']).size(1).shape('').select(true);
+        chart.line().position('time*memory').color('type', ['#cf7a39', '#f9750f']).shape('').select(true);
+
+        function renderChart() {
+            chart.source(dataList,
+                {
+                    time: {
+                        label: null,
+                        formatter: val => {
+                            var d = new Date(val * 1);
+                            return d.getMonth() +
+                                "月" +
+                                d.getDate() +
+                                "日 " +
+                                d.getHours() +
+                                ":" +
+                                formatDate(d.getMinutes()) +
+                                ":" +
+                                formatDate(d.getSeconds());
+                        },
+                        alias: '时间',
+                        max: 100,
+                        maxLimit: 100,
+                        range: [0, 1],
+                        type: 'timeCat',
+                        tickCount: 10
+                    },
+                    cpu_usage: {
+                        alias: 'CPU使用率',
+                        formatter: val => {
+                            return val + '%';
+                        },
+                        //type: "log",
+                        //base: "2"
+                    },
+                    memory: {
+                        alias: '内存使用',
+                        max: 2147483648,
+                        maxLimit: 2147483648,
+                        min: 0,
+                        formatter: val => {
+                            return Math.round(val / 1024 / 1024 * 100) / 100 + ' MB';
+                        },
+                        //type: "log",
+                        //base:"2"
+                    }
+                });
+            chart.render();
+        }
+
+        function appendChart() {
+            var dt = new Date();
+            $.post("@Url.Action("GetChartByTime")", { unixTime: nowMaxTime})
+                .done(function(obj) {
+                    if (obj.code === 200) {
+                        //var now = new Date();
+                        //for (var i = 0; i < dataList.length; i++){
+                        //    if (now.getTime() - dataList[i].time > 1000 * 60) {
+                        //        dataList.splice(i, 1);
+                        //    } else {
+                        //        break;
+                        //    }
+                        //}
+                        dataList.push(...obj.data.newList);
+                        nowMaxTime = obj.data.maxTime;
+                        chart.changeData(dataList);
+                        console.log((new Date).getTime() - dt.getTime());
+                    } else {
+                        console.log("[" + obj.code + "] " + obj.status + ": " + obj.message);
+                    }
+                })
+                .fail(function(e) {
+                    console.log(e);
+                });
+        }
+
+        function formatDate(num) {
+            return num < 10 ? '0' + num : num;
+        }
+
+        $(document).ready(function() {
+            $.post("@Url.Action("GetAllCharts")")
+                .done(function(obj) {
+                    if (obj.code === 200) {
+                        dataList = obj.data.dataList;
+                        nowMaxTime = obj.data.maxTime;
+                        renderChart();
+                        timer = window.setInterval(appendChart, 2000);
+                    } else {
+                        console.log("[" + obj.code + "] " + obj.status + ": " + obj.message);
+                    }
+                })
+                .fail(function(e) {
+                    console.log(e);
+                });
+        });
+
+        chart.on('plotenter', function (ev) {
+            console.log("plotenter");
+            window.clearInterval(timer);
+        });
+        chart.on('plotleave', function (ev) {
+            console.log("plotleave");
+            timer = window.setInterval(appendChart, 1000);
+        });
+    </script>
+}

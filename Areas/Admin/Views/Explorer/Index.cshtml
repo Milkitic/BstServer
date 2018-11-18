@@ -1,0 +1,470 @@
+﻿@using BstServer.Areas.Identity
+@model UserSettings
+@{
+    ViewData["Title"] = "File Browser";
+}
+
+@section Styles{
+    <link rel="stylesheet" href="~/lib/font-awesome/css/all.min.css" />
+    <style>
+        .cover {
+            background: #ffffff;
+            background: rgba(255, 255, 255, 0.7);
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            z-index: 100;
+            left: 0px;
+            top: 50px;
+        }
+
+        .tool-bar {
+            position: fixed;
+            text-align: right;
+            padding: 5px;
+            background-color: #F0F0F0;
+            width: 80%;
+        }
+
+            .tool-bar .close-button {
+                width: 36px;
+                height: 36px;
+                right: 0px;
+            }
+
+                .tool-bar .close-button i {
+                    position: relative;
+                    font-size: 20px;
+                    top: 6px;
+                }
+
+            .tool-bar .title {
+                position: absolute;
+                text-align: left;
+                left: 5px;
+                margin: 8px;
+                color: #303030;
+            }
+
+        .popup {
+            position: fixed;
+            background: #ffffff;
+            width: 80%;
+            height: 80%;
+            max-width: 80%;
+            max-height: 80%;
+            left: 0px;
+            top: 50px;
+            bottom: 0px;
+            right: 0px;
+            margin: auto;
+            box-shadow: rgba(0, 0, 0, 0.25) 0px 0px 10px;
+            /*overflow: hidden;*/
+        }
+
+            .popup .content-area {
+                padding: 10px;
+                padding-top: 55px;
+                background-color: #F8F8F8;
+                height: 100%;
+            }
+
+            .popup .left {
+                width: 250px;
+                height: 100%;
+                background: #e8e8e8;
+                border-radius: 5px;
+                float: left;
+            }
+
+                .popup .left img {
+                    margin-left: 10px;
+                    margin-top: 10px;
+                }
+
+                .popup .left ul {
+                    margin-top: 5px;
+                    margin-left: -30px;
+                }
+
+                .popup .left li {
+                    list-style: none;
+                }
+
+            .popup .right {
+                margin-left: 260px;
+                text-align: right;
+            }
+
+            .popup .text-area {
+                height: 100%;
+                padding-left: 5px;
+                padding-top: 5px;
+                padding-right: 5px;
+                padding-bottom: 50px;
+                background-color: white;
+                border-radius: 5px;
+            }
+
+                .popup .text-area textarea {
+                    position: relative;
+                    height: 100%;
+                    width: 100%;
+                    resize: none;
+                    border: 0px;
+                }
+
+                .popup .text-area textarea {
+                    position: relative;
+                    height: 100%;
+                    width: 100%;
+                    resize: none;
+                    border: 0px;
+                }
+
+            .popup .tool-bar2 {
+                margin-top: 3px;
+                margin-right: 2px;
+            }
+    </style>
+}
+
+<div class="cover" id="popup_vue" style="display: none;">
+    <div id="Upload" class="popup" style="display: none;">
+        <div class="tool-bar">
+            <label class="title">上传新文件</label>
+            <a v-on:click="close_popup"
+               class="btn btn-danger btn-xs close-button">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
+        <div class="content-area">
+            <form asp-controller="Explorer" role="form" asp-action="Upload" enctype="multipart/form-data" method="post" accept-charset="utf-8">
+                <div class="form-group">
+                    <label class="col-sm-2 col-sm-2 control-label" asp-for="Upload.Remark"></label>
+                    <div class="col-sm-10">
+                        <input type="text" class="form-control" asp-for="Upload.Remark" />
+                        <span class="help-block">将文件名替换为备注名（暂不支持中文）</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 col-sm-2 control-label" asp-for="Upload.AddonFile"></label>
+                    <div class="col-sm-10">
+                        <input type="file" asp-for="Upload.AddonFile" id="file" data-uploadTo="/home/uploadfile" />
+                        <span class="help-block">支持.vpk与.zip（请将vpk放入.zip根目录）</span>
+                    </div>
+                </div>
+                @*<input type="file" data-uploadTo="http://www.baidu.com" />*@
+                <div name="progress"></div>
+                <button type="submit" class="btn btn-default">上传</button>
+            </form>
+        </div>
+    </div>
+    <div id="Editor" class="popup" style="display: none;">
+        <div class="tool-bar">
+            <label class="title">{{title}}</label>
+            <a v-on:click="close_popup"
+               class="btn btn-danger btn-xs close-button">
+                <i class="fa fa-times"></i>
+            </a>
+        </div>
+        <div class="content-area">
+            <div class="left">
+                <img v-if="img_url!=null" v-bind:src="img_url" alt="Icon" />
+                <ul>
+                    <li><label>文件名：</label>{{detail.display_name}}</li>
+                    <li><label>大小：</label>{{detail.file_size_string}}</li>
+                    <li><label>创建时间：</label>{{detail.create_at}}</li>
+                    <li><label>修改时间：</label>{{detail.last_write}}</li>
+                </ul>
+            </div>
+            <div class="right text-area">
+                <textarea id="sb" v-model="content"></textarea>
+                <div class="tool-bar2">
+                    <span style="color: #808080; margin-right: 5px;">
+                        {{message}}
+                    </span>
+                    <button class="btn" v-on:click="save_file(detail.name,vue_popup.content)">保存</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<h2>@ViewData["Title"]</h2>
+
+<section id="mainSection" class="wrapper" style="display: none;">
+    <div v-if="message!=''" class="alert alert-danger" id="hint_box">
+        {{message}}
+    </div>
+    @if (ViewBag.Message != null)
+    {
+        <div v-if="message==''" class="alert alert-danger" id="hint_box2">
+            @ViewBag.Message
+        </div>
+    }
+
+    <div class="row mt">
+        <div class="col-md-12">
+            <div class="content-panel" id="table">
+                <h4>
+                    <i class="fa fa-angle-right"></i> 目录列表
+                </h4>
+                <a href="javascript:void(0);" v-on:click="get_sub_folder('!')">我的上传目录</a>
+                <hr>
+                <h5>
+                    <i class="far fa-folder-open"></i> {{current_path}}
+                </h5>
+
+                <form asp-controller="Explorer" asp-action="ChangeSettings" method="post">
+                    <label asp-for="File.DisplayAll" onclick="submit()">
+                        <input asp-for="File.DisplayAll" />
+                        @Html.DisplayNameFor(m => m.File.DisplayAll)
+                    </label>
+                    <button id="btnSubmit" type="submit" class="btn btn-sm btn-default" style="display: none;">Save</button>
+                    <button v-if="can_upload" type="button" id="btnUpload" class="btn btn-sm btn-info"
+                            onclick="show_upload()">
+                        上传新文件...
+                    </button>
+                </form>
+                <form></form>
+                <table class="table table-striped table-advance table-hover">
+                    <thead>
+                        <tr>
+                            <th>
+                                <i class="fa fa-file"></i> 文件名
+                            </th>
+                            <th class="hidden-phone">
+                                <i class="fa fa-question-circle"></i> 大小
+                            </th>
+                            <th>
+                                <i class="fa fa-clock"></i> 上传时间
+                            </th>
+                            <th>
+                                <i class=" fa fa-hourglass"></i> 状态
+                            </th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody style="height: 600px; max-height: 600px; overflow: scroll;">
+                        <tr v-if="current_path!='~'">
+                            <td>
+                                <i class="fa fa-undo"></i>
+                                <a href="javascript:void(0);" v-on:click="get_sub_folder('..')">返回上一级</a>
+                            </td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>
+                        <tr v-for="cell in cells">
+                            <td>
+                                <i v-bind:class="['far',cell.type == 'dir' ?'fa-folder':(cell.type == 'file' ?'fa-file':'fa-file-alt')]"></i>
+                                <a href="javascript:void(0);" v-on:click="cell.type == 'dir' ? get_sub_folder(cell.name) : open_popup(cell)">
+                                    {{cell.type == 'dir' ? cell.name : cell.display_name}}
+                                </a>
+                            </td>
+                            <td width="10%">
+                                {{cell.file_size_string}}
+                            </td>
+                            <td width="20%">
+                                {{cell.create_at}}
+                            </td>
+                            <td>
+                                <span v-bind:class="['label',cell.is_enabled?'label-success':'label-warning','label-mini']"
+                                      v-if="cell.type != 'dir'">
+                                    {{cell.is_enabled ? "已" : "未"}}启用
+                                </span>
+                            </td>
+                            <td>
+                                <a v-bind:class="['btn',cell.is_enabled?'btn-warning':'btn-success','btn-xs']"
+                                   v-if="cell.type != 'dir'"
+                                   href="javascript:void(0);"
+                                   v-on:click="change_status(cell.name)">
+                                    <i v-bind:class="['fa',cell.is_enabled?'fa-ban':'fa-check']"></i>
+                                    {{cell.is_enabled ? "禁" : "启"}}用
+                                </a>
+
+                                <a v-if="cell.can_delete" class="btn btn-danger btn-xs" onclick=""
+                                   href="javascript:void(0);"
+                                   v-on:click="delete_file(cell.name)">
+                                    <i class="fa fa-trash-o"></i>
+                                    删除
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- /content-panel -->
+        </div>
+        <!-- /col-md-12 -->
+    </div>
+    <!-- /row -->
+
+</section>
+<!--/wrapper -->
+
+@section Scripts{
+    <script src="~/js/vue.min.js"></script>
+    <script type="text/javascript">
+        var vue_main = new Vue({
+            el: "#hint_box",
+            data: {
+                message: ""
+            }
+        });
+
+        var vue_files = new Vue({
+            el: "#table",
+            data: {
+                current_path: "...",
+                can_upload: false,
+                cells: []
+            },
+            methods: {
+                get_sub_folder: function(e) {
+                    get_file_list(e);
+                },
+                open_popup: function(e) {
+                    $("#Editor").show();
+                    $("#popup_vue").show(100);
+                    vue_popup.title = this.current_path + "\\" + e.display_name;
+                    if (e.file_size > 1024 * 1024 * 10) {
+                        vue_popup.get_file(e.name, false);
+                    } else {
+                        vue_popup.get_file(e.name, true);
+                    }
+                },
+                change_status: function(name) {
+                    $.post("@Url.Action("ChangeFileStatus")", { fileName: name })
+                        .done(function(obj) {
+                            if (obj.code === 200) {
+                                get_file_list();
+                            } else {
+                                vue_main.message = "[" + obj.code + "] " + obj.status + ": " + obj.message;
+                            }
+                        })
+                        .fail(function(e) {
+                            vue_main.message = e;
+                        });
+                },
+                delete_file: function(name) {
+                    var messageBox = confirm("确认删除：" + name + "？\r\n文件不可恢复。");
+                    if (messageBox === true) {
+                        $.post("@Url.Action("DeleteFile")", { fileName: name })
+                            .done(function(obj) {
+                                if (obj.code === 200) {
+                                    get_file_list();
+                                } else {
+                                    vue_main.message = "[" + obj.code + "] " + obj.status + ": " + obj.message;
+                                }
+                            })
+                            .fail(function(e) {
+                                vue_main.message = e;
+                            });
+                    }
+                }
+            }
+        });
+
+        var vue_popup = new Vue({
+            el: "#popup_vue",
+            data: {
+                detail: {},
+                title: "Simple Editor",
+                img_url: null,
+                content: null,
+                message: null
+            },
+            methods: {
+                close_popup: function(e) {
+                    $("#popup_vue").hide(100,
+                        function () {
+                            $("#Editor").hide(100);
+                            $("#Upload").hide(100);
+                            vue_popup.detail = {};
+                            vue_popup.content = null;
+                            vue_popup.img_url = null;
+                            vue_popup.message = null;
+                        });
+                },
+                get_file: function(e, b) {
+                    $.post("@Url.Action("GetFile")", { fileName: e, getContent: b })
+                        .done(function(obj) {
+                            if (obj.code === 200) {
+                                vue_popup.detail = obj.data.detail;
+                                vue_popup.content = obj.data.content;
+                                vue_popup.img_url =
+                                    "/images/icons/" + obj.data.detail.extension + ".png";
+                            } else {
+                                vue_popup.message = new Date().toLocaleTimeString() + ": " + "[" + obj.code + "] " + obj.status + ": " + obj.message;
+                            }
+                        })
+                        .fail(function(e) {
+                            vue_popup.message = new Date().toLocaleTimeString() + ": " + e;
+                        });
+                },
+                save_file: function(name, content) {
+                    $.post("@Url.Action("SaveFile")", { fileName: name, content: content })
+                        .done(function(obj) {
+                            if (obj.code === 200) {
+                                vue_popup.message = new Date().toLocaleTimeString() + ": " + "Saved.";
+                                vue_popup.get_file(name, true);
+                                get_file_list();
+                            } else {
+                                vue_popup.message = new Date().toLocaleTimeString() +
+                                    ": " +
+                                    "[" +
+                                    obj.code +
+                                    "] " +
+                                    obj.status +
+                                    ": " +
+                                    obj.message;
+                            }
+                        })
+                        .fail(function(e) {
+                            vue_popup.message = new Date().toLocaleTimeString() + ": " + e;
+                        });
+                }
+            }
+        });
+
+        $(document).ready(function () {
+            get_file_list(null, function() {
+                $("#mainSection").show();
+            });
+        });
+
+        var get_file_list = function(e, callback) {
+            $.post("@Url.Action("GetFileList")", { subFolder: e })
+                .done(function(obj) {
+                    if (obj.code === 200) {
+                        vue_main.message = "";
+                        if (typeof callback !== "function") {
+                            $("#hint_box2").hide();
+                        }
+                        vue_files.current_path = obj.data.current_path;
+                        vue_files.can_upload = obj.data.can_upload;
+                        vue_files.cells = obj.data.files;
+                        if (typeof callback === "function")
+                            callback();
+                    } else {
+                        vue_main.message = "[" + obj.code + "] " + obj.status + ": " + obj.message;
+                    }
+                })
+                .fail(function(e) {
+                    vue_main.message = e;
+                });
+        };
+
+        var submit = function(e) {
+            $('#btnSubmit').click();
+        };
+
+        var show_upload = function (e) {
+            $('#popup_vue').fadeIn(100);
+            $('#Upload').show();
+        };
+    </script>
+}
