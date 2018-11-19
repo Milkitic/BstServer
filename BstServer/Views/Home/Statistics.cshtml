@@ -141,7 +141,7 @@
 
         var getFfDetail = function(y,m,d) {
 
-            $.post("@Url.Action("GetStatistics")", { y, m, d})
+            $.post("@Url.Action("GetStatistics")", { y: y, m: m, d: d })
                 .done(function(obj) {
                     if (obj.code === 200) {
                         vueFfDetail.dataList = obj.data.dataList;
