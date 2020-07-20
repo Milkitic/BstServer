@@ -15,7 +15,7 @@ namespace HostTest
         static void Main(string[] args)
         {
             string path =
-                @"C:\Users\YureruMiira\Source\Repos\Web相关\BstServer\EchoCurrentDirectory\bin\Release\EchoCurrentDirectory.exe";
+                @"D:\repos\BstServer\EchoCurrentDirectory\bin\Debug\EchoCurrentDirectory.exe";
             //path = "cmd";
             L4D2AppHost host = new L4D2AppHost(path, new HostSettings
             {
@@ -23,14 +23,8 @@ namespace HostTest
                 Encoding = Encoding.GetEncoding(936),
                 RedirectStandardInput = false
             });
-            var config = host.UserConfig;
-            var user = config.SteamUsers.FirstOrDefault(k => k.CurrentName == "狗");
-            var s = config.GetUserRate(user, 1996);
-            s = config.GetUserRate(user);
-            user.DailyInfos[0].OnlineTime += 1;
-            s = config.GetUserRate(user);
-            user.DailyInfos[0].OnlineTime -= 1;
-            config.SteamUsers.Add(new BstServer.Models.SteamUser());
+            host.DataReceived += Host_DataReceived;
+            host.Run();
             //host.UserConfig.SteamUsers.Add(new BstServer.Models.SteamUser());
             //var d = user.GetDayInfo(18, 11, 17);
             //var m = user.GetMonthInfo(18, 12);

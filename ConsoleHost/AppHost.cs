@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -104,7 +105,7 @@ namespace Milkitic.ApplicationHost
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     WindowStyle = HostSettings.ShowWindow ? ProcessWindowStyle.Normal : ProcessWindowStyle.Hidden,
-
+                    WorkingDirectory = Path.GetDirectoryName(FileName)
                 },
                 EnableRaisingEvents = true
             };

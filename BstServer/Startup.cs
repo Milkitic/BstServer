@@ -14,6 +14,7 @@ using Milkitic.ApplicationHost;
 using Milkitic.FileExplorer;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
@@ -71,18 +72,32 @@ namespace BstServer
                 options.Cookie.HttpOnly = true;
             });
 
-            services.AddSingleton(new L4D2AppHost(@"C:\Users\Administrator\Desktop\steamcmd\steamapps\common\Left 4 Dead 2 Dedicated Server\srcds.exe",
-                "-console -game left4dead2 +exec server.cfg +map c2m1_highway +allow_all_bot_survivor_team 1",
+            var dirRoot = Directory.GetDirectoryRoot(AppDomain.CurrentDomain.BaseDirectory);
+            Console.WriteLine(dirRoot);
+            var dir = @"/home/l4d2server/coop/serverfiles/srcds_run";
+            dir = Path.Combine(dirRoot, "home", "l4d2server", "coop", "serverfiles");
+            var path = Path.Combine(dir, "srcds_run");
+            Console.WriteLine(path);
+            Console.WriteLine(File.Exists(path));
+            services.AddSingleton(new L4D2AppHost(path,
+                "-game left4dead2 " +
+                "-strictportbind " +
+                "-ip 172.17.16.2 " +
+                "-port 27015 " +
+                "+clientport 27005 " +
+                "+map c3m1_plankcountry " +
+                "+servercfgfile l4d2server.cfg " +
+                "-maxplayers 8 " +
+                "-tickrate 45",
                 new HostSettings
             {
                 ShowWindow = false
             }));
             services.AddSingleton(typeof(WebSocketHandler));
-            services.AddSingleton(TerminalAppHost.GetInstance());
+            //services.AddSingleton(TerminalAppHost.GetInstance());
 
             services.AddScoped(k =>
-                new Explorer(
-                    @"C:\Users\Administrator\Desktop\steamcmd\steamapps\common\Left 4 Dead 2 Dedicated Server"));
+                new Explorer(dir));
             
             services.AddSingleton<IEmailSender, NeteaseEmailSender>(k =>
                 new NeteaseEmailSender("l4d2tool", "******"));

@@ -1,10 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace EchoCurrentDirectory
 {
@@ -12,28 +8,25 @@ namespace EchoCurrentDirectory
     {
         static void Main(string[] args)
         {
-            for (int i = 0; i < 10000000; i++)
-            {
-                string source = "150920";
-                var array = source.SplitByStep(1);
-            }
-
             string[] paths =
             {
-                new FileInfo(System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName).DirectoryName,
-                System.Environment.CurrentDirectory,
-                System.IO.Directory.GetCurrentDirectory(),
-                System.AppDomain.CurrentDomain.BaseDirectory,
-                System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase
+
             };
 
             foreach (var path in paths)
             {
                 Console.WriteLine(path);
             }
+
+            Console.WriteLine(Path.GetDirectoryName("CurrentProcess.MainModule: " +
+                                                    System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName));
+            Console.WriteLine("System.Environment.CurrentDirectory: " + System.Environment.CurrentDirectory);
+            Console.WriteLine("System.IO.Directory.GetCurrentDirectory(): " + System.IO.Directory.GetCurrentDirectory());
+            Console.WriteLine("System.AppDomain.CurrentDomain.BaseDirectory: " +
+                              System.AppDomain.CurrentDomain.BaseDirectory);
+            Console.WriteLine("System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase: " +
+                              System.AppDomain.CurrentDomain.SetupInformation.ApplicationBase);
         }
-
-
     }
 
     public static class StringExtension
