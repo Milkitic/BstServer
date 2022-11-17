@@ -39,7 +39,8 @@ namespace Milkitic.FileExplorer
             return Math.Round(byteD, 2) + units[j];
         }
 
-        public Explorer(string rootPath) : this(rootPath, "exchange", @"left4dead2\addons", new ExplorerSettings())
+        public Explorer(string rootPath) : this(rootPath, "exchange", Path.Combine("left4dead2", "addons"),
+            new ExplorerSettings())
         {
         }
 
@@ -61,21 +62,34 @@ namespace Milkitic.FileExplorer
         {
             ViewCells?.Clear();
             ViewCells = new List<ViewCell>();
-            foreach (var directory in CurrentPath.EnumerateDirectories())
+            if (CurrentPath.FullName == AddonPath.FullName)
             {
-                var cell = new DirectoryCell(directory, Settings);
+                foreach (var file in CurrentPath.EnumerateFiles())
+                {
+                    if (DisplayFilter != null && !DisplayFilter.Contains(file.Extension.ToLower().Trim('.')))
+                        continue;
+                    if (file.Name == "dtm16.vpk" ||
+                        file.Name == "tickrate_enabler.vdf" ||
+                        file.Name == "metamod.vdf")
+                        continue;
 
-                ViewCells.Add(cell);
+                    var cell = new FileCell(file, Settings);
+                    if (IsExchangePath || CurrentPath.FullName == AddonPath.FullName) cell.CanDelete = true;
+                    else cell.CanDelete = false;
+                    ViewCells.Add(cell);
+                }
+
             }
-
-            foreach (var file in CurrentPath.EnumerateFiles())
+            else
             {
-                if (DisplayFilter != null && !DisplayFilter.Contains(file.Extension.ToLower().Trim('.')))
-                    continue;
-                var cell = new FileCell(file, Settings);
-                if (IsExchangePath || CurrentPath.FullName == AddonPath.FullName) cell.CanDelete = true;
-                else cell.CanDelete = false;
-                ViewCells.Add(cell);
+                var addonDir = AddonPath.FullName;
+                foreach (var directory in CurrentPath.EnumerateDirectories())
+                {
+                    if (!addonDir.Contains(directory.FullName)) continue;
+
+                    var cell = new DirectoryCell(directory, Settings);
+                    ViewCells.Add(cell);
+                }
             }
         }
 
@@ -295,6 +309,10 @@ namespace Milkitic.FileExplorer
 
         private void CheckSubFolderAccess(string childName)
         {
+            var path1 = Path.Combine(CurrentPath.FullName, childName);
+            if (!AddonPath.FullName.Contains(path1))
+                throw new UnauthorizedAccessException("[CheckSubFolderAccess] no access to here. addon: " + AddonPath.FullName + "; target: " + path1);
+
             var filteredList = ViewCells.Where(path => path is DirectoryCell);
             if (!IncludeHidden) filteredList = filteredList.Where(k => !k.IsHidden);
             var dir = filteredList.FirstOrDefault(k => k.Name == childName);
@@ -310,6 +328,10 @@ namespace Milkitic.FileExplorer
 
         private void CheckFolderAccess(DirectoryInfo directory)
         {
+            var path1 = directory.FullName;
+            if (directory.FullName != ExchangePath.FullName && !AddonPath.FullName.Contains(path1))
+                throw new UnauthorizedAccessException("[CheckFolderAccess] no access to here. addon: " + AddonPath.FullName + "; target: " + path1);
+
             if (directory == null)
                 throw new DirectoryNotFoundException("No such directory or no access to the directory.");
             if (!directory.Exists)
