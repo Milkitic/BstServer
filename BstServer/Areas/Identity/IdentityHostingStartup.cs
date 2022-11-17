@@ -8,16 +8,15 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 
 [assembly: HostingStartup(typeof(BstServer.Areas.Identity.IdentityHostingStartup))]
-namespace BstServer.Areas.Identity
+namespace BstServer.Areas.Identity;
+
+public class IdentityHostingStartup : IHostingStartup
 {
-    public class IdentityHostingStartup : IHostingStartup
+    public void Configure(IWebHostBuilder builder)
     {
-        public void Configure(IWebHostBuilder builder)
+        builder.ConfigureServices((context, services) =>
         {
-            builder.ConfigureServices((context, services) =>
-            {
-                services.AddSingleton(new UserSettingsManager());
-            });
-        }
+            services.AddSingleton(new UserSettingsManager());
+        });
     }
 }
