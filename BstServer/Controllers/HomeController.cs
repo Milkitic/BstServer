@@ -34,7 +34,6 @@ public class HomeController : Controller
         return View();
     }
 
-
     private static (string name, string pic) GetDisplayInfo(string source)
     {
         string picName = "";

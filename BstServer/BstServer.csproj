@@ -6,6 +6,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Areas\Identity\Services\**" />
+    <Content Remove="Areas\Identity\Services\**" />
+    <EmbeddedResource Remove="Areas\Identity\Services\**" />
+    <None Remove="Areas\Identity\Services\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.0" />
@@ -22,7 +29,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Areas\Identity\Services\" />
     <Folder Include="wwwroot\images\icons\" />
     <Folder Include="wwwroot\lib\font-awesome\" />
   </ItemGroup>

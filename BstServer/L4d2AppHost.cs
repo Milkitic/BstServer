@@ -340,7 +340,7 @@ public class L4D2AppHost : AppHost
 
     private void SaveConfig()
     {
-        ConcurrentFile.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(UserConfig, Formatting.Indented));
+        File.WriteAllText(ConfigFilePath, JsonConvert.SerializeObject(UserConfig, Formatting.Indented));
         Console.WriteLine("Config saved.");
     }
 
