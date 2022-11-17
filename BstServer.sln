@@ -15,10 +15,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EchoCurrentDirectory", "Ech
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FileExplorer", "FileExplorer\FileExplorer.csproj", "{D60622B8-4953-4A4C-9188-7811DEB4F73B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication1", "WebApplication1\WebApplication1.csproj", "{274483F1-1A62-40FD-B56B-E369145E0961}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApplication2", "WebApplication2\WebApplication2.csproj", "{AF24E725-B03B-4E61-A77E-3E41497FE128}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -45,14 +41,6 @@ Global
 		{D60622B8-4953-4A4C-9188-7811DEB4F73B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D60622B8-4953-4A4C-9188-7811DEB4F73B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D60622B8-4953-4A4C-9188-7811DEB4F73B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{274483F1-1A62-40FD-B56B-E369145E0961}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{274483F1-1A62-40FD-B56B-E369145E0961}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{274483F1-1A62-40FD-B56B-E369145E0961}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{274483F1-1A62-40FD-B56B-E369145E0961}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AF24E725-B03B-4E61-A77E-3E41497FE128}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AF24E725-B03B-4E61-A77E-3E41497FE128}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AF24E725-B03B-4E61-A77E-3E41497FE128}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AF24E725-B03B-4E61-A77E-3E41497FE128}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
