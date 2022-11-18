@@ -46,7 +46,7 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
                        throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlite(connectionString));
-
+builder.WebHost.UseKestrel(k => k.ListenAnyIP(27001));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
@@ -99,7 +99,8 @@ void ConfigureOtherServices(WebApplicationBuilder builder)
     var l4dRootPath = builder.Configuration["ServerRootDir"];
     if (string.IsNullOrWhiteSpace(l4dRootPath))
     {
-        throw new ArgumentException("ServerRootDir in appsettings.json is empty!");
+        l4dRootPath = Environment.CurrentDirectory;
+        //throw new ArgumentException("ServerRootDir in appsettings.json is empty!");
     }
 
     Console.WriteLine(l4dRootPath);
