@@ -1,4 +1,8 @@
-﻿using BstServer.Areas.Admin;
+﻿using System;
+using System.IO;
+using System.Linq;
+using System.Text;
+using BstServer.Areas.Admin;
 using BstServer.Areas.Admin.Models;
 using BstServer.Areas.Identity;
 using Microsoft.AspNetCore.Authorization;
@@ -8,13 +12,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Milkitic.FileExplorer;
 using Milkitic.FileExplorer.Views;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace BstServer.Controllers;
 
@@ -27,13 +24,13 @@ public class ExplorerController : Controller
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly UserManager<IdentityUser> _userManager;
     private readonly UserSettingsManager _userSettingsManager;
-    private readonly IHostingEnvironment _env;
+    private readonly IWebHostEnvironment _env;
 
     private const string SessionKeyCurrentFolder = "CurrentFolder";
 
     public ExplorerController(Explorer explorer, SignInManager<IdentityUser> signInManager,
         UserManager<IdentityUser> userManager, UserSettingsManager userSettingsManager,
-        IHostingEnvironment env)
+        IWebHostEnvironment env)
     {
         _explorer = explorer;
         _signInManager = signInManager;

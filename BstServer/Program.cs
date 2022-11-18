@@ -57,7 +57,7 @@ builder.Services.AddSession(options =>
     options.Cookie.HttpOnly = true;
 });
 
-ConfigureOtherServices(builder.Services);
+ConfigureOtherServices(builder);
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
@@ -93,16 +93,20 @@ app.MapRazorPages();
 
 app.Run();
 
-void ConfigureOtherServices(IServiceCollection services)
+void ConfigureOtherServices(WebApplicationBuilder builder)
 {
-    var dirRoot = Directory.GetDirectoryRoot(AppDomain.CurrentDomain.BaseDirectory);
-    Console.WriteLine(dirRoot);
-    var dir = @"/home/l4d2server/coop/serverfiles/srcds_run";
-    dir = Path.Combine(dirRoot, "home", "l4d2server", "coop", "serverfiles");
-    var path = Path.Combine(dir, "srcds_run");
-    Console.WriteLine(path);
-    Console.WriteLine(File.Exists(path));
-    services.AddSingleton(new L4D2AppHost(path,
+    var services = builder.Services;
+    var l4dRootPath = builder.Configuration["ServerRootDir"];
+    if (string.IsNullOrWhiteSpace(l4dRootPath))
+    {
+        throw new ArgumentException("ServerRootDir in appsettings.json is empty!");
+    }
+
+    Console.WriteLine(l4dRootPath);
+    var executablePath = Path.Combine(l4dRootPath, "srcds_run");
+    Console.WriteLine(executablePath);
+
+    services.AddSingleton(new L4D2AppHost(executablePath,
         "-game left4dead2 " +
         "-strictportbind " +
         "-ip 0.0.0.0 " +
@@ -118,10 +122,9 @@ void ConfigureOtherServices(IServiceCollection services)
         })
     );
     services.AddSingleton(typeof(WebSocketHandler));
-    services.AddScoped(k =>
-        new Explorer(Path.Combine(dirRoot, "home", "l4d2server", "coop", "serverfiles")));
-    services.AddSingleton<IEmailSender, NeteaseEmailSender>(k =>
-        new NeteaseEmailSender("l4d2tool", "******"));
+    services.AddScoped(k => new Explorer(Path.Combine(l4dRootPath)));
+    //services.AddSingleton<IEmailSender, NeteaseEmailSender>(k =>
+    //    new NeteaseEmailSender("l4d2tool", "******"));
 }
 void Configure(WebApplication webApplication)
 {

@@ -85,7 +85,21 @@ namespace Milkitic.ApplicationHost
         public string FileName { get; set; }
         public string Args { get; set; }
         public HostSettings HostSettings { get; set; }
-        public bool? IsRunning => !_currentProcess?.HasExited;
+        public bool? IsRunning
+        {
+            get
+            {
+                try
+                {
+                    return !_currentProcess?.HasExited;
+                }
+                catch (Exception e)
+                {
+                    return null;
+                }
+            }
+        }
+
         public bool CanSendMessage => HostSettings.RedirectStandardInput;
         public Guid RunningGuid { get; set; }
 
@@ -115,7 +129,17 @@ namespace Milkitic.ApplicationHost
             _currentProcess.ErrorDataReceived += _currentProcess_DataReceived;
             _currentProcess.Exited += _currentProcess_Exited;
 
-            _currentProcess.Start();
+            try
+            {
+                _currentProcess.Start();
+            }
+            catch (Exception e)
+            {
+                _currentProcess.Dispose();
+                _currentProcess = null;
+                throw;
+            }
+
             _currentProcess.BeginOutputReadLine();
             _currentProcess.BeginErrorReadLine();
             RunningGuid = Guid.NewGuid();
