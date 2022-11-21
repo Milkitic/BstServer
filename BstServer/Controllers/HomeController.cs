@@ -1,43 +1,85 @@
-﻿using BstServer.Areas.Admin.Models;
+﻿using System.Diagnostics;
+using BstServer.Areas.Admin.Models;
 using BstServer.Models;
 using Microsoft.AspNetCore.Mvc;
-using Milkitic.ApplicationHost;
-using Milkitic.FileExplorer;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace BstServer.Controllers;
 
-[Route("front")]
 public class HomeController : Controller
 {
+    private readonly ILogger<HomeController> _logger;
     private readonly L4D2AppHost _l4D2AppHost;
 
-    public HomeController(L4D2AppHost l4D2AppHost)
+    public HomeController(L4D2AppHost l4D2AppHost, ILogger<HomeController> logger)
     {
         _l4D2AppHost = l4D2AppHost;
+        _logger = logger;
     }
 
-    [Route("~/")]
-    [Route("")]
     public IActionResult Index()
     {
         return View();
     }
 
-    [Route("statistics")]
     public IActionResult Statistics()
     {
         return View();
     }
 
+    public IActionResult Privacy()
+    {
+        return View();
+    }
+
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult Error()
+    {
+        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
+    }
+
+    [Route("/api/get_statistics")]
+    public IActionResult GetStatistics(int y, int m, int d, bool dmg = true)
+    {
+        var users = _l4D2AppHost.UserConfig.SteamUsers.ToList();
+        var dic = new List<WeaponInfo>();
+        foreach (var u in users)
+        {
+            var info = u.GetDayInfo(y, m, d)?.WeaponInfos;
+            if (info == null) continue;
+            foreach (var cell in info)
+            {
+                var dispInfo = GetDisplayInfo(cell.WeaponName);
+                var weapon = dispInfo.name;
+                var pic = dispInfo.pic;
+                var times = cell.DamageTimes;
+                var damage = cell.Damage;
+                var username = u.CurrentName;
+                if (damage == 0 && times == 0) continue;
+                if (dic.All(k => k.Weapon != weapon))
+                {
+                    dic.Add(new WeaponInfo(weapon, pic));
+                }
+
+                var sb = dic.First(k => k.Weapon == weapon);
+                sb.AddDetail(new WeaponDetail(username, damage, times));
+            }
+        }
+
+        var max = dic.Count == 0 ? 1 : dic.Max(k => k.Detail.Count);
+        foreach (var weaponInfo in dic)
+        {
+            weaponInfo.Detail.Sort(new FfComparer());
+        }
+
+        var dicSort =
+            dic.OrderByDescending(objDic => objDic.Detail.Sum(k => k.Damage)).ToList();
+        return Json(new JsonModelBase(200, "success", "success", new { column = max, dataList = dicSort }));
+    }
+
     private static (string name, string pic) GetDisplayInfo(string source)
     {
-        string picName = "";
-        string dispName = source;
+        var picName = "";
+        var dispName = source;
         switch (source)
         {
             case "Magnum":
@@ -98,58 +140,5 @@ public class HomeController : Controller
         }
 
         return (dispName, picName);
-    }
-
-    [Route("privacy")]
-    public IActionResult Privacy()
-    {
-        return View();
-    }
-
-    [HttpPost]
-    [Route("/api/get_statistics")]
-    public IActionResult GetStatistics(int y, int m, int d, bool dmg = true)
-    {
-        List<SteamUser> users = _l4D2AppHost.UserConfig.SteamUsers.ToList();
-        List<WeaponInfo> dic = new List<WeaponInfo>();
-        foreach (var u in users)
-        {
-            var info = u.GetDayInfo(y, m, d)?.WeaponInfos;
-            if (info == null) continue;
-            foreach (var cell in info)
-            {
-                var dispInfo = GetDisplayInfo(cell.WeaponName);
-                var weapon = dispInfo.name;
-                var pic = dispInfo.pic;
-                int times = cell.DamageTimes;
-                var damage = cell.Damage;
-                var username = u.CurrentName;
-                if (damage == 0 && times == 0) continue;
-                if (dic.All(k => k.Weapon != weapon))
-                {
-                    dic.Add(new WeaponInfo(weapon, pic));
-                }
-
-                var sb = dic.First(k => k.Weapon == weapon);
-                sb.AddDetail(new WeaponDetail(username, damage, times));
-            }
-        }
-
-        var max = dic.Count == 0 ? 1 : dic.Max(k => k.Detail.Count);
-        foreach (var weaponInfo in dic)
-        {
-            weaponInfo.Detail.Sort(new FfComparer());
-        }
-
-        List<WeaponInfo> dicSort =
-            dic.OrderByDescending(objDic => objDic.Detail.Sum(k => k.Damage)).ToList();
-        return Json(new JsonModelBase(200, "success", "success", new { column = max, dataList = dicSort }));
-    }
-
-    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-    [Route("~/error")]
-    public IActionResult Error()
-    {
-        return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
     }
 }

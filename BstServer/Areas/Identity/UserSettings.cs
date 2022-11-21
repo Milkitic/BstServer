@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace BstServer.Areas.Identity;
 
@@ -21,7 +16,8 @@ public class UserSettings
 
     public class UploadViewModel
     {
-        [Required] [Display(Name = "备注")]
+        [Required]
+        [Display(Name = "备注")]
         public string Remark { get; set; }
 
         [Required]

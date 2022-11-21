@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace BstServer;
+﻿namespace BstServer;
 
 public static class StringExtension
 {

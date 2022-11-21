@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using System.Drawing;
+﻿using System.Drawing;
 using System.IO;
+using Newtonsoft.Json;
 
 namespace Milkitic.FileExplorer.Views
 {

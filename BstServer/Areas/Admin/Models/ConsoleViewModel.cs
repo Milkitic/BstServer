@@ -1,11 +1,5 @@
-﻿using Milkitic.ApplicationHost;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
+using Milkitic.ApplicationHost;
 
 namespace BstServer.Areas.Admin.Models;
 
@@ -27,7 +21,7 @@ public class ConsoleViewModel
         RunningGuid = appHost.RunningGuid;
     }
 
-    [Display(Name ="运行实例 GUID")]
+    [Display(Name = "运行实例 GUID")]
     public Guid RunningGuid { get; set; }
 
     [Display(Name = "进程名")]

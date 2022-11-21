@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Milkitic.FileExplorer
+﻿namespace Milkitic.FileExplorer
 {
     public class ExplorerSettings
     {
